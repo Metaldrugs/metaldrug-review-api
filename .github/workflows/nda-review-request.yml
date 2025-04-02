@@ -1,0 +1,34 @@
+name: NDA Review Request
+
+on:
+  repository_dispatch:
+    types: [nda-review-request]
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create NDA Request Issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const payload = context.payload.client_payload;
+            const issueTitle = `🔒 NDA Review Request from ${payload.name}`;
+            const issueBody = `
+**Requester:** ${payload.name}  
+**Email:** ${payload.email}  
+**Institution:** ${payload.institution || 'N/A'}  
+**Requested Info:**  
+${payload.message}
+
+**Timestamp:** ${payload.timestamp}
+`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['nda-request']
+            });
